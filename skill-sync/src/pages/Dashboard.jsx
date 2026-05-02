@@ -1,67 +1,86 @@
 import { useEffect, useState } from "react";
 import { fetchCourses } from "../api/courses";
+import { motion } from "framer-motion";
+import styled from "styled-components";
 
-function Dashboard({ darkMode }) {
+const Page = styled.div`
+  padding: 20px;
+`;
+
+const Search = styled.input`
+  padding: 10px;
+  width: 300px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: none;
+`;
+
+const Grid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 15px;
+`;
+
+const Card = styled(motion.div)`
+  background: #1a1a1a;
+  color: white;
+  padding: 15px;
+  border-radius: 12px;
+  cursor: pointer;
+
+  &:hover {
+    background: #222;
+  }
+`;
+
+const Tag = styled.span`
+  display: inline-block;
+  margin-top: 10px;
+  padding: 4px 8px;
+  background: #00c2ff;
+  color: black;
+  border-radius: 5px;
+  font-size: 12px;
+`;
+
+function Dashboard() {
   const [courses, setCourses] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 2;
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
-    const loadCourses = async () => {
-      const data = await fetchCourses();
-      setCourses(data);
-    };
-
-    loadCourses();
+    fetchCourses().then(setCourses);
   }, []);
 
-  // pagination logic
-  const indexOfLast = currentPage * itemsPerPage;
-  const indexOfFirst = indexOfLast - itemsPerPage;
-
-  const currentCourses = courses.slice(indexOfFirst, indexOfLast);
-  const totalPages = Math.ceil(courses.length / itemsPerPage);
+  const filtered = courses.filter((c) =>
+    c.title.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>Courses </h1>
+    <Page>
 
-      {/* COURSES */}
-      {currentCourses.map((course) => (
-        <div
-          key={course.id}
-          style={{
-            background: darkMode ? "#1a1a1a" : "#f2f2f2",
-            color: darkMode ? "#fff" : "#000",
-            padding: "10px",
-            margin: "10px",
-            borderRadius: "8px",
-          }}
-        >
-          <h3>{course.title}</h3>
-          <p>{course.level}</p>
-        </div>
-      ))}
+      <h1>Dashboard 📚</h1>
 
-      {/* PAGINATION */}
-      <div>
-        {Array.from({ length: totalPages }, (_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrentPage(i + 1)}
-            style={{
-              margin: "5px",
-              padding: "6px 10px",
-              background: currentPage === i + 1 ? "blue" : "gray",
-              color: "white",
-              border: "none",
-            }}
+      <Search
+        placeholder="Search courses..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+
+      <Grid>
+        {filtered.map((course, index) => (
+          <Card
+            key={course.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
           >
-            {i + 1}
-          </button>
+            <h3>{course.title}</h3>
+            <Tag>{course.level}</Tag>
+          </Card>
         ))}
-      </div>
-    </div>
+      </Grid>
+
+    </Page>
   );
 }
 
